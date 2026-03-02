@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 function NewsCard({ title, url, points, author }) {
   return (
     <li className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
@@ -15,5 +17,12 @@ function NewsCard({ title, url, points, author }) {
     </li>
   );
 }
+
+NewsCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  url: PropTypes.string,
+  points: PropTypes.number.isRequired,
+  author: PropTypes.string.isRequired,
+};
 
 export default NewsCard;

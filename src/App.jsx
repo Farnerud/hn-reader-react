@@ -1,29 +1,29 @@
 import { useState, useEffect } from "react";
 import NewsCard from "./NewsCard";
 
+async function fetchStories() {
+  const res = await fetch(
+    "https://hacker-news.firebaseio.com/v0/topstories.json",
+  );
+  const ids = await res.json();
+  const top20 = ids.slice(0, 20);
+  const storyPromises = top20.map((id) =>
+    fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(
+      (r) => r.json(),
+    ),
+  );
+  return Promise.all(storyPromises);
+}
+
 function App() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchStories() {
-      const res = await fetch(
-        "https://hacker-news.firebaseio.com/v0/topstories.json",
-      );
-      const ids = await res.json();
-      const top20 = ids.slice(0, 20);
-      const storyPromises = top20.map((id) =>
-        fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(
-          (r) => r.json(),
-        ),
-      );
-      const stories = await Promise.all(storyPromises);
-
-      setStories(stories);
+    fetchStories().then((data) => {
+      setStories(data);
       setLoading(false);
-    }
-
-    fetchStories();
+    });
   }, []);
 
   return (
