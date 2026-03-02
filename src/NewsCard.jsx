@@ -1,11 +1,28 @@
-function NewsCard(props) {
+import PropTypes from "prop-types";
+
+function NewsCard({ title, url, points, author }) {
   return (
-    <div>
-      <a href={props.url} target="_blank" rel="noopener noreferrer">
-        {props.title}
+    <li className="bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:shadow-md transition-shadow">
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-gray-900 font-medium hover:text-orange-500 transition-colors leadign-snug"
+      >
+        {title}
       </a>
-    </div>
+      <p className="text-sm text-gray-400 mt-2">
+        {points} puntos • by {author}
+      </p>
+    </li>
   );
 }
+
+NewsCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  url: PropTypes.string,
+  points: PropTypes.number.isRequired,
+  author: PropTypes.string.isRequired,
+};
 
 export default NewsCard;
