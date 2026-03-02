@@ -10,7 +10,7 @@ function NewsCard({ title, url, points, author }) {
         {title}
       </a>
       <p className="text-sm text-gray-400 mt-2">
-        {points} puntos • by {author}
+        {points} puntos • By {author}
       </p>
     </li>
   );
