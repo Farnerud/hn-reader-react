@@ -1,59 +1,98 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import NewsCard from "./NewsCard";
 
-async function fetchStories() {
+async function fetchStories(signal) {
   const res = await fetch(
     "https://hacker-news.firebaseio.com/v0/topstories.json",
+    { signal },
   );
+
+  if (!res.ok) {
+    throw new Error(`Error del servidor: ${res.status}`);
+  }
+
   const ids = await res.json();
   const top20 = ids.slice(0, 20);
-  const storyPromises = top20.map((id) =>
-    fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`).then(
-      (r) => r.json(),
+
+  const results = await Promise.allSettled(
+    top20.map((id) =>
+      fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`, {
+        signal,
+      }).then((r) => {
+        if (!r.ok) throw new Error(`Item ${id} falló: ${r.status}`);
+        return r.json();
+      }),
     ),
   );
-  return Promise.all(storyPromises);
+
+  return results.filter((r) => r.status === "fulfilled").map((r) => r.value);
 }
 
 function App() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchStories().then((data) => {
-      setStories(data);
-      setLoading(false);
-    });
+  const load = useCallback(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+
+    fetchStories(controller.signal)
+      .then(setStories)
+      .catch((err) => {
+        if (err.name !== "AbortError") setError(err.message);
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
   }, []);
 
-  return (
-    <>
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-orange-500 px-6 py-4 shadow-md">
-          <h1 className="text-white text-2xl font-bold">Hacker News Reader</h1>
-        </header>
+  useEffect(() => load(), [load]);
 
-        <main className="max-w-2xl mx-auto px-4 py-6">
-          {loading ? (
-            <p className="text-center text-gray-500 mt-10">
-              Cargando noticias...
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {stories.map((story) => (
-                <NewsCard
-                  key={story.id}
-                  title={story.title}
-                  url={story.url}
-                  points={story.score}
-                  author={story.by}
-                />
-              ))}
-            </ul>
-          )}
-        </main>
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">Cargando noticias...</p>
       </div>
-    </>
+    );
+
+  if (error)
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 font-medium">Algo salió mal</p>
+          <p className="text-gray-400 text-sm mt-1">{error}</p>
+          <button
+            onClick={load}
+            className="mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-orange-500 px-6 py-4 shadow-md">
+        <h1 className="text-white text-2xl font-bold">Hacker News Reader</h1>
+      </header>
+      <main className="max-w-2xl mx-auto px-4 py-6">
+        <ul className="flex flex-col gap-3">
+          {stories.map((story) => (
+            <NewsCard
+              key={story.id}
+              title={story.title}
+              url={story.url}
+              points={story.score}
+              author={story.by}
+            />
+          ))}
+        </ul>
+      </main>
+    </div>
   );
 }
+
 export default App;
