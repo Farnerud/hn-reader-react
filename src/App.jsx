@@ -29,10 +29,13 @@ async function fetchStories(signal) {
   return results.filter((r) => r.status === "fulfilled").map((r) => r.value);
 }
 
+const PAGE_SIZE = 6;
+
 function App() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(0);
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
     if (saved) return saved === "dark";
@@ -117,7 +120,7 @@ function App() {
       </header>
       <main className="max-w-2xl mx-auto px-4 py-6">
         <ul className="flex flex-col gap-3">
-          {stories.map((story) => (
+          {stories.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map((story) => (
             <NewsCard
               key={story.id}
               title={story.title}
@@ -127,6 +130,25 @@ function App() {
             />
           ))}
         </ul>
+        <div className="flex items-center justify-between mt-6">
+          <button
+            onClick={() => setPage((p) => p - 1)}
+            disabled={page === 0}
+            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            ← Previous
+          </button>
+          <span className="text-sm text-gray-500 dark:text-zinc-400">
+            {page + 1} / {Math.ceil(stories.length / PAGE_SIZE)}
+          </span>
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= Math.ceil(stories.length / PAGE_SIZE) - 1}
+            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Next →
+          </button>
+        </div>
       </main>
     </div>
   );
