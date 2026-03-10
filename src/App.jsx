@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Sun, Moon } from "lucide-react";
 import NewsCard from "./NewsCard";
 
 async function fetchStories(signal) {
@@ -32,6 +33,16 @@ function App() {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  }, [isDark]);
 
   const load = useCallback(() => {
     const controller = new AbortController();
@@ -52,17 +63,17 @@ function App() {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-500">Cargando noticias...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 flex items-center justify-center">
+        <p className="text-gray-500 dark:text-zinc-400">Cargando noticias...</p>
       </div>
     );
 
   if (error)
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-500 font-medium">Algo salió mal</p>
-          <p className="text-gray-400 text-sm mt-1">{error}</p>
+          <p className="text-gray-400 dark:text-zinc-500 text-sm mt-1">{error}</p>
           <button
             onClick={load}
             className="mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
@@ -74,9 +85,35 @@ function App() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-orange-500 px-6 py-4 shadow-md">
-        <h1 className="text-white text-2xl font-bold">Hacker News Reader</h1>
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900">
+      <header className="bg-zinc-900 dark:bg-zinc-950 px-6 py-5 shadow-lg">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="bg-orange-500 text-white text-sm font-bold px-2 py-1 rounded">
+              ▲
+            </span>
+            <div>
+              <h1 className="text-white text-xl font-bold leading-none">
+                Hacker News Reader
+              </h1>
+              <p className="text-zinc-400 text-xs mt-0.5">
+                Curated tech stories
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-zinc-400 text-xs font-medium tracking-widest uppercase">
+              Top 20
+            </span>
+            <button
+              onClick={() => setIsDark((d) => !d)}
+              aria-label="Toggle theme"
+              className="text-zinc-400 hover:text-white transition-colors"
+            >
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
+        </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 py-6">
         <ul className="flex flex-col gap-3">

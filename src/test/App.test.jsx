@@ -24,6 +24,7 @@ function mockFetch(idsResponse, itemResponse) {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  localStorage.clear();
 });
 
 test('shows loading state initially', () => {
@@ -51,6 +52,26 @@ test('shows error message when top stories fetch fails', async () => {
     expect(screen.getByText('Algo salió mal')).toBeInTheDocument();
   });
   expect(screen.getByText('Error del servidor: 500')).toBeInTheDocument();
+});
+
+test('theme toggle button switches between sun and moon icons', async () => {
+  mockFetch([1], mockStory);
+  render(<App />);
+  await waitFor(() => screen.getByText('Test HN Story'));
+
+  const toggle = screen.getByRole('button', { name: /toggle theme/i });
+  // Default: light mode (matchMedia returns false), moon icon shown
+  expect(document.documentElement.classList.contains('dark')).toBe(false);
+
+  await userEvent.click(toggle);
+  expect(document.documentElement.classList.contains('dark')).toBe(true);
+});
+
+test('respects saved dark theme from localStorage', () => {
+  localStorage.setItem('theme', 'dark');
+  mockFetch([1], mockStory);
+  render(<App />);
+  expect(document.documentElement.classList.contains('dark')).toBe(true);
 });
 
 test('retry button reloads stories after error', async () => {
