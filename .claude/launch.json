@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "/Users/roth/.nvm/versions/node/v20.19.4/bin/node",
+      "runtimeArgs": ["/Users/roth/Sites/hn-reader-react/node_modules/.bin/vite"],
+      "port": 5173
+    },
+    {
+      "name": "preview",
+      "runtimeExecutable": "/Users/roth/.nvm/versions/node/v20.19.4/bin/node",
+      "runtimeArgs": ["/Users/roth/Sites/hn-reader-react/node_modules/.bin/vite", "preview"],
+      "port": 4173
+    }
+  ]
+}
