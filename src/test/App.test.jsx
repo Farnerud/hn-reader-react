@@ -10,16 +10,29 @@ const mockStory = {
   by: 'testuser',
 };
 
+function makeStories(count) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    title: `Story ${i + 1}`,
+    url: `https://example.com/${i + 1}`,
+    score: 100 - i,
+    by: `user${i + 1}`,
+  }));
+}
+
 function mockFetch(idsResponse, itemResponse) {
-  global.fetch = vi.fn()
-    .mockResolvedValueOnce({
+  const items = Array.isArray(itemResponse) ? itemResponse : [itemResponse];
+  const mock = vi.fn().mockResolvedValueOnce({
+    ok: true,
+    json: () => Promise.resolve(idsResponse),
+  });
+  items.forEach((item) => {
+    mock.mockResolvedValueOnce({
       ok: true,
-      json: () => Promise.resolve(idsResponse),
-    })
-    .mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(itemResponse),
+      json: () => Promise.resolve(item),
     });
+  });
+  global.fetch = mock;
 }
 
 afterEach(() => {
@@ -88,4 +101,81 @@ test('retry button reloads stories after error', async () => {
   await waitFor(() => {
     expect(screen.getByText('Test HN Story')).toBeInTheDocument();
   });
+});
+
+test('shows only PAGE_SIZE stories per page', async () => {
+  const stories = makeStories(8);
+  mockFetch(stories.map((s) => s.id), stories);
+  render(<App />);
+
+  await waitFor(() => screen.getByText('Story 1'));
+
+  // Should show first 6 stories (PAGE_SIZE = 6)
+  for (let i = 1; i <= 6; i++) {
+    expect(screen.getByText(`Story ${i}`)).toBeInTheDocument();
+  }
+  expect(screen.queryByText('Story 7')).not.toBeInTheDocument();
+});
+
+test('Previous button is disabled on first page', async () => {
+  const stories = makeStories(8);
+  mockFetch(stories.map((s) => s.id), stories);
+  render(<App />);
+
+  await waitFor(() => screen.getByText('Story 1'));
+
+  expect(screen.getByRole('button', { name: /previous/i })).toBeDisabled();
+});
+
+test('Next button navigates to second page', async () => {
+  const stories = makeStories(8);
+  mockFetch(stories.map((s) => s.id), stories);
+  render(<App />);
+
+  await waitFor(() => screen.getByText('Story 1'));
+
+  await userEvent.click(screen.getByRole('button', { name: /next/i }));
+
+  expect(screen.getByText('Story 7')).toBeInTheDocument();
+  expect(screen.queryByText('Story 1')).not.toBeInTheDocument();
+});
+
+test('Next button is disabled on last page', async () => {
+  const stories = makeStories(8);
+  mockFetch(stories.map((s) => s.id), stories);
+  render(<App />);
+
+  await waitFor(() => screen.getByText('Story 1'));
+
+  await userEvent.click(screen.getByRole('button', { name: /next/i }));
+
+  expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+});
+
+test('page counter displays correct values', async () => {
+  const stories = makeStories(8);
+  mockFetch(stories.map((s) => s.id), stories);
+  render(<App />);
+
+  await waitFor(() => screen.getByText('Story 1'));
+
+  // 8 stories / 6 per page = 2 pages
+  expect(screen.getByText('1 / 2')).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: /next/i }));
+  expect(screen.getByText('2 / 2')).toBeInTheDocument();
+});
+
+test('Previous button navigates back', async () => {
+  const stories = makeStories(8);
+  mockFetch(stories.map((s) => s.id), stories);
+  render(<App />);
+
+  await waitFor(() => screen.getByText('Story 1'));
+
+  await userEvent.click(screen.getByRole('button', { name: /next/i }));
+  expect(screen.queryByText('Story 1')).not.toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole('button', { name: /previous/i }));
+  expect(screen.getByText('Story 1')).toBeInTheDocument();
 });

@@ -30,6 +30,8 @@ async function fetchStories(signal) {
 }
 
 const PAGE_SIZE = 6;
+const BTN_CLASS =
+  "px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors";
 
 function App() {
   const [stories, setStories] = useState([]);
@@ -79,7 +81,7 @@ function App() {
           <p className="text-gray-400 dark:text-zinc-500 text-sm mt-1">{error}</p>
           <button
             onClick={load}
-            className="mt-4 px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+            className={`mt-4 ${BTN_CLASS}`}
           >
             Reintentar
           </button>
@@ -123,6 +125,7 @@ function App() {
           {stories.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map((story) => (
             <NewsCard
               key={story.id}
+              id={story.id}
               title={story.title}
               url={story.url}
               points={story.score}
@@ -134,7 +137,7 @@ function App() {
           <button
             onClick={() => setPage((p) => p - 1)}
             disabled={page === 0}
-            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`${BTN_CLASS} disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             ← Previous
           </button>
@@ -144,7 +147,7 @@ function App() {
           <button
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= Math.ceil(stories.length / PAGE_SIZE) - 1}
-            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`${BTN_CLASS} disabled:opacity-40 disabled:cursor-not-allowed`}
           >
             Next →
           </button>
