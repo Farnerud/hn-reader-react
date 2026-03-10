@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import NewsCard from '../NewsCard';
 
 const baseProps = {
+  id: 1,
   title: 'Test Story',
   url: 'https://example.com',
   points: 42,
@@ -24,7 +25,10 @@ test('renders points and author', () => {
   expect(screen.getByText(/testuser/)).toBeInTheDocument();
 });
 
-test('handles missing url without crashing', () => {
-  render(<NewsCard title="Ask HN: Test" points={10} author="someone" />);
-  expect(screen.getByText('Ask HN: Test')).toBeInTheDocument();
+test('falls back to HN item URL when url prop is missing', () => {
+  render(<NewsCard id={12345} title="Ask HN: Test" points={10} author="someone" />);
+  expect(screen.getByRole('link')).toHaveAttribute(
+    'href',
+    'https://news.ycombinator.com/item?id=12345',
+  );
 });
